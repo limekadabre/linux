@@ -32,28 +32,47 @@ Processor : Intel core i5
 * Finally git add Makefile and cmpe283-1.c, commit and push the changes to linux repo in github.
 
 Kernel is Ready
+
+
  ![alt text](https://github.com/limekadabre/linux/blob/master/283output/Kernel_ready.PNG?raw=true)
 
 New linux
+
+
  ![alt text](https://github.com/limekadabre/linux/blob/master/283output/linux_new.PNG?raw=true)
 
 Old Linux
+
+
   ![alt text](https://github.com/limekadabre/linux/blob/master/283output/linux_old_5.11.PNG?raw=true)
 
 
 Sudo make install
+
+
   ![alt text](https://github.com/limekadabre/linux/blob/master/283output/make_install.PNG?raw=true)
 Make
+
+
   ![alt text](https://github.com/limekadabre/linux/blob/master/283output/make.PNG?raw=true)
 
 
 
-Dmesg : pinbased procbased
+Dmesg : pinbased procbased controls
+
+
   ![alt text](https://github.com/limekadabre/linux/blob/master/283output/output1.PNG?raw=true)
+
+
 Secprocbased
+
+
   ![alt text](https://github.com/limekadabre/linux/blob/master/283output/output2.PNG?raw=true)
 
+
 Entry and exit controls  
+
+
  ![alt text](https://github.com/limekadabre/linux/blob/master/283output/output3.PNG?raw=true)
 
 
