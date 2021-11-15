@@ -1,9 +1,14 @@
 CMPE283 – VIRTUALIZATION TECHNOLOGIES
+
 ASSIGNMENT – 1 : DISCOVERING VMX FEATURES
 
 HOST OS : Windows
+
 RAM : 8 GB
+
 Processor : Intel core i5
+
+STEPS :
 
 * Install VMware workstation player for windows and create ubuntu workstation player using .iso file downloaded from ubuntu official website. Assigned 80 GB memory and 8 virtual CPUs. Enable Nested Virtualization by selecting 'Virtualize Intel VT-x/EPT or AMD-V/RVI' in virtual machine settings.
 
@@ -25,6 +30,8 @@ Processor : Intel core i5
 * Run make command. After successful build, load and unload module using sudo insmod cmpe283-1.ko and sudo rmmod cmpe283-1.ko. insmod calls function init_module and rmmod calls function cleanup_module.
 
 * Dmesg on cmd prompt to check the VMX features.
+  
+  OUTPUT : https://github.com/limekadabre/linux/blob/master/283output/output.txt
 
 
 * Create cmpe283 directory inside linux and copy Makefile and cmpe283-1.c file to it.
@@ -51,6 +58,8 @@ Sudo make install
 
 
   ![alt text](https://github.com/limekadabre/linux/blob/master/283output/make_install.PNG?raw=true)
+  
+  
 Make
 
 
