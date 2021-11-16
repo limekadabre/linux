@@ -125,6 +125,32 @@ struct capability_info Exit[11] =
         {24,"Conceal VMX from PT"}
 };
 
+/* Writing a function to check if sec procbased controls are available
+ * Read the IA32_VMX_PROCBASED_CTLS
+ * if bit 63 is set then sec procbased controls are available
+ */
+void check_bit_63(void)
+{
+	uint32_t lo, hi;
+	/* procbased controls */
+	rdmsr(IA32_VMX_PROCBASED_CTLS, lo, hi);
+
+	if ( hi & (1 << (63 - 32)))
+	{
+		printk("Sec procbased controls are available");
+			/* sec procbased controls */
+			rdmsr(IA32_VMX_PROCBASED_CTLS2, lo, hi);
+			pr_info("sec procbased Controls MSR: 0x%llx\n",
+				(uint64_t)(lo | (uint64_t)hi << 32));
+			report_capability(secprocbased, 23, lo, hi);
+	}
+	else
+	{
+		printk("Sec procbased controls are NOT available");
+	}
+}
+
+
 
 /*
  * report_capability
@@ -180,11 +206,9 @@ detect_vmx_features(void)
 		(uint64_t)(lo | (uint64_t)hi << 32));
 	report_capability(procbased, 21, lo, hi);
 	
-	/*sec proc based controls*/
-	rdmsr(IA32_VMX_PROCBASED_CTLS2, lo, hi);
-	pr_info("sec procbased Controls MSR: 0x%llx\n",
-		(uint64_t)(lo | (uint64_t)hi << 32));
-	report_capability(secprocbased, 23, lo, hi);
+	
+	/* Check availability of Sec procbased controls */
+	check_bit_63();
 	
 	
 	/*entry controls*/
