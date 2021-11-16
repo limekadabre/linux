@@ -14,7 +14,7 @@ STEPS :
 
 * Fork the linux repository to your personal github account and clone it using cmd git clone. This clones the linux kernel sources.
 
-* Then edit cmpe283-1.c to add code for proc based, secondary proc based, entry and exit controls. This code interprets and outputs the values that are read from the MSR and tells if the value can be set or cleared. The code has 5 struct defined for each of the control group which is written by referring to Intel SDM. The function report_capability detects and prints VMX capabilities.
+* Then edit cmpe283-1.c to add code for proc based, secondary proc based, entry and exit controls. This code interprets and outputs the values that are read from the MSR and tells if the value can be set or cleared. The code has 5 struct defined for each of the control group which is written by referring to Intel SDM. Function check_bit_63 is written to check if secondary procbased controls are available. The function report_capability detects and prints VMX capabilities. 
 
 * Then go to the linux folder, I had to install gcc(build-essential) , ncurses, pkg-config using sudo apt     install. GCC is GNU Compiler Collection. It is a compiler system mainly used to compile the C and C++ programs. GNU ncurses is software API for controlling writing to the console screen under Unix, Linux and other operating systems.
 
