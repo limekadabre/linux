@@ -14,6 +14,8 @@
 #include <linux/vmalloc.h>
 #include <linux/uaccess.h>
 #include <linux/sched/stat.h>
+#include <linux/module.h>
+
 
 #include <asm/processor.h>
 #include <asm/user.h>
@@ -24,6 +26,7 @@
 #include "mmu.h"
 #include "trace.h"
 #include "pmu.h"
+#define DEFINED_EXIT_COUNT 70
 
 /*
  * Unlike "struct cpuinfo_x86.x86_capability", kvm_cpu_caps doesn't need to be
@@ -1222,16 +1225,103 @@ bool kvm_cpuid(struct kvm_vcpu *vcpu, u32 *eax, u32 *ebx,
 }
 EXPORT_SYMBOL_GPL(kvm_cpuid);
 
+/**
+ * This will consists of the information regarding exits. It contains exit reason,
+ * frequency of a particular exit and lastly count of cpu cycles spent to 
+ * handle the exit.
+ * CMPE- - This is the arrays that will hold all the information
+ * */ 
+  
+  
+  
+  
+/*
+* variables declared for assignment_2
+*/
+
+atomic_t total_exits = ATOMIC_INIT(0);
+atomic_long_t total_cpu_cycles = ATOMIC_INIT(0);
+/*
+* variables declared for assignment_3
+*/
+
+atomic_t total_exits_per_reason[DEFINED_EXIT_COUNT];
+atomic_long_t total_cpu_cycles_per_reason[DEFINED_EXIT_COUNT];
+
+EXPORT_SYMBOL(total_exits);
+EXPORT_SYMBOL(total_cpu_cycles);
+
+EXPORT_SYMBOL(total_exits_per_reason);
+EXPORT_SYMBOL(total_cpu_cycles_per_reason);
 int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 {
 	u32 eax, ebx, ecx, edx;
-
+	uint8_t i;
+	char msg[100];
+	uint64_t total_cpu_local, exit_reason_cycles;	
 	if (cpuid_fault_enabled(vcpu) && !kvm_require_cpl(vcpu, 0))
 		return 1;
 
 	eax = kvm_rax_read(vcpu);
-	ecx = kvm_rcx_read(vcpu);
-	kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, false);
+	ecx = kvm_rcx_read(vcpu);	
+	/**
+	    to specify input for cpuid explicitly
+	* */
+	
+	if (eax == 0x4FFFFFFF || eax == 0x4FFFFFFE || eax == 0x4FFFFFFD || eax == 0x4FFFFFFC) {
+	
+		switch (eax) {
+			case 0x4FFFFFFF:
+				eax = atomic_read(&total_exits);
+				break;
+			case 0x4FFFFFFE:
+				total_cpu_local = atomic64_read(&total_cpu_cycles);
+				ebx = (total_cpu_local >> 32);
+				ecx = (total_cpu_local & 0xFFFFFFFF);
+				break;
+			case 0x4FFFFFFD:
+			case 0x4FFFFFFC:
+			
+                         /* here the exit reason is defined in SDM , but it is not enabled in KVM so setting eax, ebx, ecx, edx to 0  */
+				if   (ecx == 5 || ecx == 6 || ecx == 11 || ecx == 17 || ecx == 66 || ecx == 69) {
+					eax = ebx = ecx = edx = 0x0;
+					
+				} else if  (ecx < 0 || ecx > 69 || ecx == 35 || ecx == 38 || ecx == 42 || ecx == 65) { //now here the exit reason is not defined in SDM  
+			                     eax = ebx = ecx = 0x0;
+				       	     edx = 0xFFFFFFFF;
+					
+				}
+				else { 
+				//return the total time spent on exits with leaf node input
+					if (eax == 0x4FFFFFFC) {
+						exit_reason_cycles = atomic64_read(&total_cpu_cycles_per_reason[ecx]);
+						ebx = (exit_reason_cycles >> 32);
+						ecx = (exit_reason_cycles & 0xFFFFFFFF);
+						edx = 0x0; 
+					
+						printk("For Leaf Node: 0x4FFFFFFC returning following exit information");
+						for(i = 0; i < DEFINED_EXIT_COUNT; i++) {
+							snprintf(msg, 99, "For Exit number %d , total %lli CPU cycles spent processing it\n", i, atomic64_read(&total_cpu_cycles_per_reason[i]));
+							printk(msg);
+						}
+					} else if (eax == 0x4FFFFFFD) {
+					              eax = atomic_read(&total_exits_per_reason[ecx]);
+						      ebx = ecx = edx = 0x0; 
+						      //with the help of dmesg command we can see that how many times a particular exit has been handled
+						      printk("For Leaf Node: 0x4FFFFFFD returning following exit information");
+						      for(i = 0; i < DEFINED_EXIT_COUNT; i++) {
+						      snprintf(msg, 99, "The Exit number %d was processed %d times\n", i, atomic_read(&total_exits_per_reason[i]));
+						      printk(msg);								
+						      }			
+						      
+						}
+                                    }
+				break;
+		}
+	
+	} else {
+		kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, false);
+	}
 	kvm_rax_write(vcpu, eax);
 	kvm_rbx_write(vcpu, ebx);
 	kvm_rcx_write(vcpu, ecx);
@@ -1239,3 +1329,6 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 	return kvm_skip_emulated_instruction(vcpu);
 }
 EXPORT_SYMBOL_GPL(kvm_emulate_cpuid);
+
+
+
