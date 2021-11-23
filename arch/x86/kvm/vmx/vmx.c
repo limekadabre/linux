@@ -5888,12 +5888,18 @@ void dump_vmcs(struct kvm_vcpu *vcpu)
  * The guest has exited.  See if we can fix it or if we need userspace
  * assistance.
  */
+
+
+
+
 static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 {
 	struct vcpu_vmx *vmx = to_vmx(vcpu);
 	union vmx_exit_reason exit_reason = vmx->exit_reason;
 	u32 vectoring_info = vmx->idt_vectoring_info;
 	u16 exit_handler_index;
+	
+
 
 	/*
 	 * Flush logged GPAs PML buffer, this will make dirty_bitmap more
@@ -6052,8 +6058,31 @@ unexpected_vmexit:
 
 static int vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 {
-	int ret = __vmx_handle_exit(vcpu, exit_fastpath);
+	extern atomic_t total_exits_per_reason[70];
+	extern atomic_long_t total_cpu_cycles_per_reason[70];
+	extern atomic_t total_exits;
+	extern atomic_long_t total_cpu_cycles;
+	int ret;
+	u64 delta;
+	u64 before_cpu_cycles;
+	u64 after_cpu_cycles;
+	u16 exit_handler_index;
+	struct vcpu_vmx *vmx = to_vmx(vcpu);
+	union vmx_exit_reason exit_reason = vmx->exit_reason;
 
+	atomic_inc(&total_exits);
+	before_cpu_cycles = rdtsc();
+
+
+	exit_handler_index = array_index_nospec((u16)exit_reason.basic,
+						kvm_vmx_max_exit_handlers);
+
+	ret = __vmx_handle_exit(vcpu, exit_fastpath);
+	after_cpu_cycles = rdtsc();
+	delta = after_cpu_cycles - before_cpu_cycles;
+	atomic_inc(&total_exits_per_reason[exit_handler_index]);
+	atomic64_add(delta, &total_cpu_cycles_per_reason[exit_handler_index]);
+	atomic64_add(delta, &total_cpu_cycles);
 	/*
 	 * Exit to user space when bus lock detected to inform that there is
 	 * a bus lock in guest.
@@ -8043,3 +8072,6 @@ static int __init vmx_init(void)
 	return 0;
 }
 module_init(vmx_init);
+
+
+
